@@ -42,7 +42,7 @@ Since this is a lightweight static application, you can run it locally without i
 
 ---
 
-## ☁️ Deploying to Google Cloud App Engine
+## ☁️ Deploying to Google Cloud Run
 
 ### 1. Manual CLI Deployment
 If you have the **Google Cloud SDK** installed, deploy directly from your workspace directory:
@@ -51,17 +51,17 @@ If you have the **Google Cloud SDK** installed, deploy directly from your worksp
 gcloud auth login
 
 # Set active GCP Project ID
-gcloud config set project your-gcp-project-id
+gcloud config set project 243071773428
 
-# Deploy app
-gcloud app deploy --promote
+# Deploy app to Cloud Run using source-based build
+gcloud run deploy lifebridge-ai --source . --region asia-south1 --allow-unauthenticated
 ```
 
 ---
 
 ## 🔄 GitHub Actions CI/CD Workflow
 
-The project includes an automated deployment workflow located in `.github/workflows/deploy.yml`. When you push code changes to the `main` branch, GitHub Actions will automatically deploy the updated assets directly to Google App Engine.
+The project includes an automated deployment workflow located in `.github/workflows/deploy.yml`. When you push code changes to the `main` branch, GitHub Actions will automatically deploy the updated assets directly to Google Cloud Run.
 
 ### Setup Instructions for CI/CD Workflow:
 
@@ -69,9 +69,10 @@ The project includes an automated deployment workflow located in `.github/workfl
    - Go to **GCP Console** -> **IAM & Admin** -> **Service Accounts**.
    - Create a service account named `github-actions-deployer`.
    - Grant the following roles:
-     - **App Engine Admin** (`roles/appengine.appAdmin`)
-     - **Cloud Build Editor** (`roles/cloudbuild.builds.editor`)
+     - **Cloud Run Admin** (`roles/run.admin`)
      - **Storage Admin** (`roles/storage.admin`)
+     - **Service Account User** (`roles/iam.serviceAccountUser`)
+     - **Cloud Build Editor** (`roles/cloudbuild.builds.editor`)
 2. **Create JSON Key**:
    - Click on the created service account, go to the **Keys** tab, and click **Add Key** -> **Create new key** (JSON format).
    - Save the downloaded JSON file.
@@ -81,4 +82,5 @@ The project includes an automated deployment workflow located in `.github/workfl
      - Name: `GCP_SA_KEY`
      - Value: Paste the entire content of the downloaded Service Account JSON key.
 4. **Push to Main**:
-   - Any commit pushed to the `main` branch will now trigger the GAE deployment pipeline.
+   - Any commit pushed to the `main` branch will now trigger the Cloud Run deployment pipeline.
+

@@ -1,13 +1,18 @@
-name: Deploy to Google App Engine
+name: Deploy to Google Cloud Run
 
 on:
   push:
     branches:
       - main
 
+env:
+  PROJECT_ID: '243071773428'
+  SERVICE_NAME: 'lifebridge-ai'
+  REGION: 'asia-south1'
+
 jobs:
   deploy:
-    name: Deploy to GAE
+    name: Deploy to Cloud Run
     runs-on: ubuntu-latest
 
     steps:
@@ -19,8 +24,22 @@ jobs:
       with:
         credentials_json: ${{ secrets.GCP_SA_KEY }}
 
-    - name: Deploy to App Engine
-      uses: google-github-actions/deploy-appengine@v1
+    - name: Set up Cloud SDK
+      uses: google-github-actions/setup-gcloud@v1
+
+    - name: Configure Docker
+      run: |
+        gcloud auth configure-docker --quiet
+
+    - name: Build and Push Docker Image
+      run: |
+        docker build -t gcr.io/${{ env.PROJECT_ID }}/${{ env.SERVICE_NAME }}:${{ github.sha }} .
+        docker push gcr.io/${{ env.PROJECT_ID }}/${{ env.SERVICE_NAME }}:${{ github.sha }}
+
+    - name: Deploy to Cloud Run
+      uses: google-github-actions/deploy-cloudrun@v1
       with:
-        deliverables: 'app.yaml'
-        promote: true
+        service: ${{ env.SERVICE_NAME }}
+        image: gcr.io/${{ env.PROJECT_ID }}/${{ env.SERVICE_NAME }}:${{ github.sha }}
+        region: ${{ env.REGION }}
+        flags: '--allow-unauthenticated'
